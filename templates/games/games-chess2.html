@@ -1,0 +1,163 @@
+{% load static %}
+{% url 'return_ai_move' as play %}
+<!Doctype HTML>
+<html>
+	<head>
+		<title>
+			sneetch chess
+		</title>
+		<!-- Jquery required for chess.js and chessboard.js -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+        <!--chessboard.js : local copy with static directory prepended to image links -->
+        <script type="text/javascript" src="{% static '/js_modules/chessboard_ui.js' %}"></script>
+
+        <!-- Styling required for chessboard.js from CDN-->
+		<link rel="stylesheet"
+      	href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
+      	integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU"
+      	crossorigin="anonymous">
+
+      	<!-- chess.js local build -->
+      	<script type="text/javascript" src="{% static 'js_modules/chess.js/chess_logic.js' %}"></script>
+
+      	
+	</head>
+ 
+	<body>
+		<center>
+		<p>
+			Sneetch App Chess
+		</p>
+		<div id="myBoard" style="width: 400px"></div>
+		<label>Controls: Make a move by dragging and dropping a White piece</label>
+		<div id = "status"> </div>
+		<div id="err_box"></div>
+
+		<!-- chess_game_logic.js -->
+      	<script type="text/javascript">
+      
+			var board = null
+			var game = new Chess()
+			var $status = $('#status')
+			var $pgn = $('#pgn')
+			var ai_move = null
+
+			function onDragStart (source, piece, position, orientation) {
+		    	// do not pick up pieces if the game is over
+		    	if (game.game_over()) return false
+
+		    	// only pick up pieces for the side to move
+		    	if ((game.turn() === 'w' && piece.search(/^b/) !== -1) || (game.turn() === 'b')) {
+		      	return false
+		    	}
+		  	}
+
+		  	function onDrop (source, target) {
+		    	// see if the move is legal
+		    	var move = game.move({
+		      	from: source,
+		      	to: target,
+		      	promotion: 'q' // NOTE: always promote to a queen for example simplicity
+		    	})
+
+		    	// illegal move
+		    	if (move === null) return 'snapback'
+
+		    	// add dynamic way of routing to /play view using django template language
+		    	//handle case when server does not respond so move cannot be made
+		    	try{
+		    		if (game.turn() === 'b') httpGet("{{ play }}", game.fen());
+		    	}
+		    	catch(e){
+		    		message = 'Error: oops server could not be reached. Check internet connection and refresh page'
+		    		var $err_box = $('#err_box')
+		    		$err_box.html(message)
+
+		    	}
+		
+		    	updateStatus()
+		  	}
+
+
+			function httpGet(url, state) {
+				$status.html('AI making move...')
+				url = url.concat('?fen=', state)
+			    var xmlHttp = new XMLHttpRequest();
+			    xmlHttp.open( 'GET', url, false ); // false for synchronous request
+			    xmlHttp.send( 'fen' );
+			    ai_move = xmlHttp.responseText
+			}
+
+
+		  	// update the board position after the piece snap
+		  	// for castling, en passant, pawn promotion
+		  	function onSnapEnd () {
+		   		from_square = ai_move.substring(0,2)
+		   		to_square = ai_move.substring(2, 4)
+		   		if (from_square === '00'){
+		   			var winner =  game.turn()
+		   			if (winner === 'b') winner = 'White';
+		   			if (winner === 'w') winner = 'Black';
+		   			winner = winner.concat(' is the winner')
+		   			$status.html(winner)
+		   		}
+		   		else{
+		   		game.move({from: from_square, to: to_square})
+		   		$status.html(' ')
+		   		board.position(game.fen())}
+		  	}
+
+		  	function updateStatus () {
+		    	var status = ''
+
+		    	var moveColor = 'White'
+		    	if (game.turn() === 'b') {
+		      		moveColor = 'Black'
+		    	}
+		    	if (game.turn() === 'w'){
+		    		moveColor = 'White'
+		    	}
+
+		    	// checkmate?
+		    	if (game.in_checkmate()) {
+		      		status = 'Game over, ' + moveColor + ' is in checkmate.'
+		    	}
+
+		    	// draw?
+		    	else if (game.in_draw()) {
+		      		status = 'Game over, drawn position'
+		    	}
+
+		    	// game still on
+		    	else {
+		      		status = " "
+
+		      		// check?
+		      		if (game.in_check()) {
+		        		status += ', ' + moveColor + ' is in check'
+		      		}
+		    	}
+
+		    $status.html(status)
+		   
+		  	}
+
+		  	var config = {
+		   	 	draggable: true,
+		    	position: 'start',
+		    	onDragStart: onDragStart,
+		    	onDrop: onDrop,
+		    	onSnapEnd: onSnapEnd
+		  	}
+
+		  	board = Chessboard('myBoard', config)
+
+		  	updateStatus()
+
+      	</script>
+      </center>
+	</body>
+
+
+</html>

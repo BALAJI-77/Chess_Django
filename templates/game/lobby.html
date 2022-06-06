@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+
+{%block title%}Lobby{% endblock %}
+  
+{% block navbar %}
+    
+    <ul class="navbar-nav ml-auto">
+      <li class="nav-item">
+        <a class="nav-link" href="/accounts/logout">Logout</a>
+      </li>
+      <li class="nav-item">
+      	<a class="nav-link active"><b>Hi, {{ user.username }}</b></a>
+      </li>
+	</ul>
+{% endblock %}
+
+{% block body %}
+  
+
+  <div class="container">
+
+    <style>
+      h4,p{color: white;}
+    </style>
+
+    <div class="row">
+     <div class="col-md-4">
+        <h4>Play With AI</h4>
+        
+        <p><a class="btn btn-secondary" href="/single" role="button">Click </a></p>
+      </div>
+      <div class="col-md-4">
+        <h4>Make Game Request</h4>
+       
+        <p><a class="btn btn-secondary" href="/ongoing" role="button">Click </a></p>
+      </div>
+    </div> 
+    <hr>
+  </div>
+
+
+
+{% endblock %}

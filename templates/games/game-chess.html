@@ -1,0 +1,408 @@
+{% extends "games/base.html" %} {% load static %} {% block head_title %} Chess
+{% endblock %} {% block extra_head %}
+
+<meta
+  name="viewport"
+  content="width=device-width, user-scalable=no, initial-scale=1.0, minimum-scale=1, maximum-scale=1"
+/>
+
+<!-- Jquery required for chess.js and chessboard.js -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<!--chessboard.js : local copy with static directory prepended to image links -->
+<script
+  type="text/javascript"
+  src="{% static '/games/js/chessboard_ui.js' %}"
+></script>
+
+<!-- Styling required for chessboard.js from CDN-->
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
+  integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU"
+  crossorigin="anonymous"
+/>
+
+<!-- chess.js local build -->
+<script
+  type="text/javascript"
+  src="{% static 'games/js/chess.js/chess_logic.js' %}"
+></script>
+<style>
+  #myBoard {
+    width: 500px;
+  }
+  /* mobile */
+  @media only screen and (max-width: 1024px) {
+    html,
+    body {
+      /* disables pull-down-to-refresh, at least on my phone */
+      overflow: hidden;
+    }
+    #myBoard {
+      width: 100%;
+    }
+    #container {
+      width: 90%;
+      margin: 0 auto;
+      padding: 0;
+    }
+  }
+</style>
+
+{% endblock %} {% block content %}
+<div class="player__tile player-2">
+  <div class="player__digits">
+    <span id="min2">05</span>:<span id="sec2">00</span>
+  </div>
+</div>
+<div id="myBoard"></div>
+<div class="player__tile player-1">
+  <div class="player__digits">
+    <span id="min1">05</span>:<span id="sec1">00</span>
+  </div>
+</div>
+<label>Controls: Make a move by dragging and dropping a White piece</label>
+<div id="count"></div>
+<div id="AI_score"></div>
+<div id="Player_score"></div>
+<div id="status"></div>
+<div id="winner"></div>
+<div id="err_box"></div>
+<div class="player"></div>
+
+<!-- chess_game_logic.js -->
+<script type="text/javascript">
+  $(document).ready(function () {
+    console.log("ready!");
+    startTimer();
+  });
+
+  var board = null;
+  var game = new Chess();
+  var Ra_score = 1200;
+  var Rb_score = 1100;
+  var $winner = $("#winner");
+  var $status = $("#status");
+  var $count = $("#count");
+  var $pgn = $("#pgn");
+  var ai_move = "";
+  var result = null;
+  var $AI_score = $("#AI_score");
+  var $Player_score = $("#Player_score");
+  var whiteSquareGrey = "#a9a9a9";
+  var blackSquareGrey = "#696969";
+  // const socket = new WebSocket("ws://" + window.location.host + "/game/");
+
+  // var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
+  // const socket = ws_scheme + '://' + window.location.host + "/game/" + {{game_id}};
+
+  const socket = new WebSocket(
+    "ws://" + window.location.host + "/game/"+ {{game_id}}
+  );
+
+  url = "{% url 'return_total_count' %}";
+  total_count = url.concat("?total_count");
+  var xmlHttp = new XMLHttpRequest();
+  xmlHttp.open("GET", total_count, false); // false for synchronous request
+  xmlHttp.send(url);
+
+  function removeGreySquares() {
+    $("#myBoard .square-55d63").css("background", "");
+  }
+
+  function greySquare(square) {
+    var $square = $("#myBoard .square-" + square);
+    var background = whiteSquareGrey;
+    if ($square.hasClass("black-3c85d")) {
+      background = blackSquareGrey;
+    }
+    $square.css("background", background);
+  }
+
+  function onMouseoverSquare(square, piece) {
+    // get list of possible moves for this square
+    var moves = game.moves({
+      square: square,
+      verbose: true,
+    });
+    // exit if there are no moves available for this square
+    if (moves.length === 0) return;
+    // highlight the square they moused over
+    greySquare(square);
+    // highlight the possible squares for this piece
+    for (var i = 0; i < moves.length; i++) {
+      greySquare(moves[i].to);
+    }
+  }
+
+  function onMouseoutSquare(square, piece) {
+    removeGreySquares();
+  }
+
+  //send fen to python
+  function fen_board() {
+    url = "{% url 'return_fen' %}";
+    var xmlHttp = new XMLHttpRequest();
+    fen = url.concat("?fen=" + game.fen());
+    console.log("b=" + fen);
+    xmlHttp.open("GET", fen, false);
+    xmlHttp.send("fen");
+  }
+
+  // function move_validate(source, target, from_square, to_square, ai_movement) {
+  function move_validate(move, ai_movement) {
+    // send the movement in pgn
+    url = "{% url 'return_move_validate' %}";
+    // pgn = url.concat("?pgn=" + move) ||
+    //   // url.concat("?pgn=" + from_square + to_square) ||
+    //   url.concat("?pgn=" + ai_movement);
+    pgn = url.concat("?pgn=" + move);
+
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("GET", pgn, false); // false for synchronous request
+    xmlHttp.send("pgn");
+    move_valid = xmlHttp.responseText;
+    console.log(move_valid);
+    console.log("pgn.console=" + pgn);
+  }
+
+  function movecount() {
+    url = "{% url 'return_move_count' %}";
+    // pgn = url.concat("?pgn2=" + source + target);
+    result = url.concat("?result=" + move_valid);
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("GET", result, false); // false for synchronous request
+    xmlHttp.send("result");
+    move_count = xmlHttp.responseText;
+    $count.html("Move left: " + move_count);
+    console.log(move_count);
+    if (move_count === "0") {
+      console.log("end");
+      $status.html("You have reached the limit of 500 moves");
+      return true;
+    }
+    return false;
+  }
+
+  function onDragStart(source, piece, position, orientation) {
+    fen_board();
+    // do not pick up pieces if the game is over
+    if (game.game_over()) return false;
+    // only pick up pieces for the side to move
+    return !(
+      (orientation === "white" && piece.search(/^w/) === -1) ||
+      (orientation === "black" && piece.search(/^b/) === -1)
+    );
+
+    // if ((game.turn() === "w" && piece.search(/^b/) !== -1) || game.turn() === "b")
+    // {
+    //   return false;
+    // }
+  }
+
+  function onDrop(source, target) {
+    // see if the move is legal and generate board positiion(fen)
+    var move = game.move({ from: source, to: target, promotion: "q" });
+    move = source + target;
+    move_validate(move);
+    res = movecount();
+    if (res == true) return "snapback";
+    if (res == true) {
+      game = game.game_over();
+    }
+    if (move_valid == "illegal" || move === null) return "snapback";
+    // add dynamic way of routing to /play view using django template language
+    //handle case when server does not respond so move cannot be made
+    try {
+      if (game.turn() === "b") {
+        socket.send(JSON.stringify({ command: "new-move-AI", fen: game.fen() }));
+
+        fen_board();
+        movecount();
+
+        // httpGet("{% url 'return_ai_move_stockfish' %}", game.fen());
+        // console.log("q="+game.fen());
+      }
+    } catch (e) {
+      message =
+        "Error: oops server could not be reached. Check internet connection and refresh page";
+      var $err_box = $("#err_box");
+      $err_box.html(message);
+    }
+    updateStatus();
+  }
+
+  function httpGet(url, state) {
+    // $status.html('AI making move...')
+    // move_count = move_count - 1;
+    url = url.concat("?fen=", state);
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("GET", url, false); // false for synchronous request
+    xmlHttp.send("fen");
+    ai_move = xmlHttp.responseText;
+    // console.log("ai="+ai_move)
+  }
+
+  // update the board position after the piece snap
+  // for castling, en passant, pawn promotion
+  function onSnapEnd() {
+    // from_square = ai_move.substring(0, 2);
+    // to_square = ai_move.substring(2, 4);
+
+    // game.move({ from: from_square, to: to_square });
+    // move_validate(from_square, to_square);
+    // $count.html(status);
+    // board.position(game.fen());
+    getCurrentScore("{% url 'return_current_score' %}");
+    updateStatus();
+    // }
+  }
+
+  function updateStatus() {
+    var status = "";
+    var moveColor = "White";
+    if (game.turn() === "b") {
+      moveColor = "Black";
+    }
+    if (game.turn() === "w") {
+      moveColor = "White";
+    }
+    //validate
+    url = "{% url 'return_validate' %}";
+    url = url.concat("?fen=", game.fen());
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("GET", url, false); // false for synchronous request
+    xmlHttp.send("fen");
+    result = xmlHttp.responseText;
+
+    if (result === "Check") {
+      status += "Hey " + moveColor + " is in check";
+      $status.html(status);
+    }
+
+    if (result === "Checkmate") {
+      getScore("{% url 'return_score' %}", moveColor);
+      // getScore("{% url 'return_score' %}");
+      status += "Game over, " + moveColor + " is in checkmate.";
+      if (moveColor === "White") {
+        var black = "Black is the winner";
+        $winner.html(black);
+      }
+      if (moveColor === "Black") {
+        var white = "White is the winner";
+        $winner.html(white);
+      }
+      $status.html(status);
+    }
+    if (result === "Draw") {
+      status += "Game over, drawn position";
+      $status.html(status);
+    }
+    if (result === "False") {
+      status = " ";
+      console.log("else");
+      $status.html(status);
+    }
+    // $status.html(status)
+    swapPlayer();
+  }
+
+  function getScore(url, loser) {
+    var xmlHttp = new XMLHttpRequest();
+    url = url.concat("?fen=", loser);
+    xmlHttp.open("GET", url, false);
+    xmlHttp.send("fen");
+    json_score = xmlHttp.responseText;
+    const obj = JSON.parse(json_score);
+    Player_score = obj.Player_Score;
+    AI_Score = obj.AI_Score;
+    AI_score = "AI's new elo score is " + AI_Score;
+    Player_score = "Hey Player, Your new elo score is " + Player_score;
+    $AI_score.html(AI_score);
+    $Player_score.html(Player_score);
+  }
+
+  // getCurrentScore gets the new elo score
+  function getCurrentScore(url) {
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("GET", url, false);
+    xmlHttp.send("fen");
+    //xmlHttp.send( 'fen' );
+    json_score = xmlHttp.responseText;
+    const obj = JSON.parse(json_score);
+    Player_score = obj.Player_Current_Score;
+    AI_Score = obj.AI_Current_Score;
+    AI_score = "AI's current elo score is " + AI_Score;
+    Player_score = "Hey Player, Your current elo score is " + Player_score;
+    $AI_score.html(AI_score);
+    $Player_score.html(Player_score);
+  }
+
+  socket.onclose = function () {
+    $modalTitle.html("Connection closed");
+    $modalBody.html(
+      "Connection closed unexpectedly please wait while we try to reconnect..."
+    );
+    $("#gameModal").modal({
+      keyboard: false,
+      backdrop: "static",
+    });
+  };
+
+  socket.onopen = function () {
+    console.log("connection");
+  };
+
+  // var config = {
+  //   draggable: true,
+  //   position: "start",
+  //   onDragStart: onDragStart,
+  //   onDrop: onDrop,
+  //   onMouseoutSquare: onMouseoutSquare,
+  //   onMouseoverSquare: onMouseoverSquare,
+  //   onSnapEnd: onSnapEnd,
+  // };
+
+  socket.onmessage = function (message) {
+    console.log("Got websocket message " + message.data);
+    var data = JSON.parse(message.data);
+    if (data.command == "join") {
+      console.log("joining room as " + data.orientation);
+      var config = {
+        draggable: true,
+        position: "start",
+        onDragStart: onDragStart,
+        onDrop: onDrop,
+        onMouseoutSquare: onMouseoutSquare,
+        onMouseoverSquare: onMouseoverSquare,
+        onSnapEnd: onSnapEnd,
+        orientation: data.orientation,
+      };
+      board = Chessboard("myBoard", config);
+      orientation = data.orientation;
+      board.position(game.fen());
+      // updateStatus();
+    } else if (data.command == "new-move-AI") {
+      game.move(data["move"], { sloppy: true });
+      // var ai_move = string(data["move"]);
+      var ai_movement = data["move"];
+      // // pgn1=move;
+      console.log("aI=" + ai_movement);
+      // console.log(typeof(ai_move))
+      move_validate(ai_movement);
+
+      board.position(game.fen());
+      // board = Chessboard("myBoard", config);
+    } else {
+      console.log("Illegal message recieved from server");
+    }
+  };
+
+  board = Chessboard("myBoard", config);
+  updateStatus();
+</script>
+
+<!-- 5.00min time -->
+<script type="text/javascript" src="{% static 'games/js/script.js' %}"></script>
+{% endblock %}

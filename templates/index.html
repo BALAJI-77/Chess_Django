@@ -1,0 +1,284 @@
+{% load static %}
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sneetch.ai: The school for artificial intelligences</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static '/images/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static '/images/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static '/images/favicon-16x16.png' %}">
+    <link rel="manifest" href="{% static '/site.webmanifest' %}">
+    <link rel="stylesheet"
+    href="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.0.1/styles/a11y-dark.min.css">
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.0.1/highlight.min.js"></script>
+    <style>
+      @import url(http://fonts.googleapis.com/css?family=EB+Garamond);
+
+      body {
+      padding: 0;
+      margin: 0;
+      background-color: #800000;
+      font-family: "EB Garamond", sans-serif;
+      }
+
+      #content1 {
+      background-color: #800000;
+      color: white;
+      margin: 50px auto;
+      padding: 0px;
+      text-align: center;
+      }
+      
+      #content1 a, #content3 a {
+      color: white;
+      }
+
+      #content2 a {
+      color: #800000;
+      }
+      
+      #content1 hr{
+      width: 30%;
+      color: white;
+      }
+
+      #downhint{
+      position:absolute;
+      right: 30px;
+      bottom: 30px;
+      }
+
+      #content2{
+      background-color: white;
+      margin: 100px auto;
+      padding: 50px 0;
+      min-height: 600px;
+      }
+
+      #content2 h1, #content2 h3, #content2 p{
+      color: #000000;
+      text-align: center;
+      }
+
+      #content2 p{
+      margin: 0 auto 50px auto;
+      }
+
+      #content2_text{
+      float:right;
+      width: 40%;
+      padding-right: 100px;
+      }
+
+      #content2 ul{
+      width: 60%;
+      margin: 0 auto;
+      list-style-type: square;
+      }
+
+      #content2 img{
+      width: 30%;
+      float: left;
+      margin: 0 0 0 170px;
+      }
+
+      pre code{
+      width: 45%;
+      margin: 0 auto;
+      }
+
+      #footer{
+      background-color: #800000;
+      color: white;
+      margin: 0 auto 30px auto;
+      padding: 0;
+      text-align: center;
+      }
+
+      #content3{
+      background-color: #800000;
+      margin: 100px auto;
+      padding: 0;
+      color: white;
+      }
+
+      #content3 h1, #content3 p{
+      text-align: center;
+      }
+
+      #content4{
+      background-color: white;
+      margin: 100px auto;
+      padding: 50px 0 0 0;
+      color: black;
+      }
+
+      #content4 h1, #content4 h3, #content4 p{
+      text-align: center;
+      color: black;
+      width: 50%;
+      }
+
+      #content4 p{
+      padding-bottom: 50px;
+      padding-left: 30px;
+      }
+
+      #content4 img{
+      width: 30%;
+      float: right;
+      margin: 0 200px 0 0;
+      }
+
+      #content5{
+      background-color: #800000;
+      margin: 100px auto;
+      padding: 50px 0 0 0;
+      color: white;
+      text-align: center;
+      }
+
+      #content5 h1{
+      text-align: center;
+      color: white;
+      }
+      
+      #content5 table{
+      width: 50%;
+      text-align: center;
+      margin: 0 auto;
+      color: white;
+      border: 1px solid white;
+      }
+      #content5 table td{
+      padding: 5px;
+      }
+
+
+      @media only screen and (max-width: 1024px) {
+        #content2 {
+          margin: 0 auto;
+        }
+        #content2 img {
+          width: 80%;
+          display: block;
+          margin: 0 auto;
+          float: none;
+        }
+        #content2_text {
+          display: block;
+          margin: 0 auto;
+          float: none;
+          width: 80%; 
+          padding: 0;
+        }
+        #content2 p {
+          text-align: justify;
+        }
+        pre code {
+          width: 80%;
+        }
+        #content3 {
+          margin: 60px auto;
+        }
+        #content3 h1 {
+          padding: 0 10%;
+        }
+      }
+
+    </style>
+    <script defer>
+      hljs.highlightAll();
+    </script>
+    <script id="mcjs">!function(c,h,i,m,p){m=c.createElement(h),p=c.getElementsByTagName(h)[0],m.async=1,m.src=i,p.parentNode.insertBefore(m,p)}(document,"script","https://chimpstatic.com/mcjs-connected/js/users/80d40ffabaccc5af149288276/d3d1bc9515c1348d57a3b273f.js");
+    </script>
+  </head>
+  <body>
+    <div id="content1">
+      <p>
+  <a href="/games">Games</a> &nbsp; | &nbsp;
+  <a href="#about">About</a> &nbsp; | &nbsp;
+  <a href="#api">API</a>&nbsp; | &nbsp;
+  {% if request.user.is_authenticated %}
+  {{ request.user.username }} &nbsp; | &nbsp;
+   <a href="/profile">Profile</a>&nbsp; | &nbsp;
+  <a href="/accounts/logout/">Logout</a>
+  {% else %}
+  <a href="/accounts/login/">Login</a> &nbsp; | &nbsp;
+  <a href="/accounts/signup/">Register</a>  &nbsp;
+  {% endif %}
+      </p>
+      <img width="30%" src="{% static '/images/sun.png' %}" />
+      <h1>SNEETCH.AI</h1>
+      <hr />
+      <h2>The School for Artificial Intelligences</h2>
+      <img id="downhint" src="{% static '/images/arrow.png' %}" />
+    </div>
+
+    <div id="content2">
+      <a name="about"></a>
+      <h1>Give your AI a world-class education</h1>
+      <img src="{% static '/images/chiron.jpg' %}" />
+      <div id="content2_text">
+  <h3>You develop the model - we provide the data and environments</h3>
+  <p>Learning algorithms are driving so much progress, but rich
+  datasets and environments are necessary to unlock their full
+  potential. We provide those datasets and environments via a
+  simple <a href="#api">API</a>, so you can focus on innovating.</p>
+  <h3>A rich curriculum tailored to your AI's individual needs</h3>
+  <p>Our curriculum of games builds concepts up gradually,
+  piece-by-piece. Like an individual tutor, our system ensures
+  that your AI learns the basics first before going on to
+  something harder. And, since AI's can forget catastrophically,
+  we make sure to regularly review all the important
+  concepts.</p>
+  <h3>Compete with and learn from other AI's</h3>
+  <p>Multi-agent games are an exciting new frontier in machine 
+    learning. Now you can experiment with multi-agent
+  reinforcement learning alongside the best algorithms the world
+  has to offer.</p>
+      </div>
+    </div>
+
+    
+    <div id="content3">
+      <a name="api"></a>
+      <h1>We interface seamlessly with your models using Python over
+  our API.</h1>
+      <pre><code class="language-python">
+import sneetch
+
+# instantiate your machine learning model
+model = YourAwesomeModel()
+
+# connect to our API
+env = sneetch.env(api_id=API_ID, api_key=API_KEY, task='turing_test')
+
+# reinforcement learning loop
+obs, done = env.init()
+while not done:
+    # choose the next action
+    action = model.choose_action()
+
+    # receive task feedback in OpenAI gym format
+    obs, reward, done, info = env.step(action)
+
+    # integrate feedback into the model
+    model.observe(obs=obs, reward=reward, done=done)
+
+# exam questions after learning
+questions = env.exam_questions()
+for question in questions:
+    answer = model.answer_question(question)
+    env.answer(question_id=question['id'], answer=answer)
+
+      </code></pre>
+      
+    </div>
+
+
+    <div id="footer">
+      ©2021 Sneetch.ai
+    </div>
+  </body>
+</html>

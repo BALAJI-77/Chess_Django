@@ -1,0 +1,14 @@
+{% extends "games/base.html" %}
+{% load static %}
+{% load i18n %}
+{% block head_title %}{% trans "Games" %}{% endblock %}
+
+{% block content %}
+  <h1>Games</h1>
+  <ul>
+    <li><a href="{% url 'sneetch-game-clicks' %}">Clicks</a></li>
+    <li><a href="{% url 'game-chess' %}">Chess</a></li>
+  <!--  <li><a href="{% url 'new-game-chess' %}">New Chess Test</a></li>-->
+  </ul>
+
+{% endblock %}

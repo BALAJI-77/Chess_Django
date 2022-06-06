@@ -1,0 +1,12 @@
+db.sqlite3
+__pycache__
+
+*.pyc
+
+sneetch/settings.py
+staticfiles
+
+*~
+env
+
+stockfish

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{% block head_title %}{% endblock %}</title>
+    {% block extra_head %}
+    {% endblock %}
+    <style>
+      @import url(http://fonts.googleapis.com/css?family=EB+Garamond);
+
+      body {
+      padding: 0;
+      margin: 0;
+      background-color: #800000;
+      font-family: "EB Garamond", sans-serif;
+      color: white;
+      height: 100%;
+      }
+      body a{
+	  color:white;
+      }
+
+      #container{
+	  width: 50%;
+	  height: 100%;
+	  margin: 0 auto;
+	  padding: 50px;
+	  background-color: #800000;
+	  border: 1px solid white;
+      }
+      
+    </style>
+  </head>
+  <body>
+    {% block body %}
+
+    <div id="container">
+    
+    {% if messages %}
+    <div>
+      <strong>Messages:</strong>
+      <ul>
+        {% for message in messages %}
+        <li>{{message}}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <div>
+      <strong>Menu:</strong>
+      <ul>
+        <li><a href="/">Home</a></li>
+        {% if user.is_authenticated %}
+        <li><a href="{% url 'account_email' %}">Change E-mail</a></li>
+        <li><a href="{% url 'account_logout' %}">Sign Out</a></li>
+        {% else %}
+        <li><a href="{% url 'account_login' %}">Sign In</a></li>
+        <li><a href="{% url 'account_signup' %}">Sign Up</a></li>
+        {% endif %}
+      </ul>
+    </div>
+    {% block content %}
+    {% endblock %}
+
+    </div>
+    {% endblock %}
+    {% block extra_body %}
+    {% endblock %}
+  </body>
+</html>

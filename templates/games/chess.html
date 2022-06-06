@@ -1,0 +1,13 @@
+{% extends "games/base.html" %}
+{% load static %}
+{% load i18n %}
+{% block head_title %}{% trans "Chess" %}{% endblock %}
+
+{% block content %}
+  <h1>Chess</h1>
+  <ul>
+    <li><a href="{% url 'sneetch-game-chess' %}">Play Chess with AI</a></li>
+    <li><a href="{% url 'new-game-chess' %}">Multiplayer Chess (Test)</a></li>
+  </ul>
+
+{% endblock %}

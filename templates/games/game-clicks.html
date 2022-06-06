@@ -1,0 +1,15 @@
+{% extends "games/base.html" %}
+
+{% load static %}
+{% block head_title %}
+Clicks
+{% endblock %}
+{% block extra_head %}
+{{ request.GET.aiport|json_script:"aiport" }}
+<script src="//cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<canvas id="canvas_initial" width="400" height="300"></canvas>
+<script src="{% static 'games/js/clicks.js' %}"></script>
+{% endblock %}
